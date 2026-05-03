@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Tax Tracker — 233 & 235 W 80th St</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --blue:#2563eb;--blue-light:#eff6ff;--blue-border:#bfdbfe;
+  --green:#16a34a;--green-light:#f0fdf4;--green-border:#86efac;
+  --amber:#d97706;--amber-light:#fffbeb;--amber-border:#fcd34d;
+  --red:#dc2626;--red-light:#fef2f2;--red-border:#fca5a5;
+  --purple:#7c3aed;--purple-light:#f5f3ff;--purple-border:#c4b5fd;
+  --pink:#db2777;--pink-light:#fdf2f8;--pink-border:#f9a8d4;
+  --slate:#1e293b;--slate-mid:#475569;--slate-light:#94a3b8;
+  --bg:#f8fafc;--white:#fff;
+  --radius:14px;--radius-sm:8px;--radius-pill:999px;
+  --shadow:0 1px 8px rgba(0,0,0,.07);--shadow-md:0 4px 20px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--slate);min-height:100vh;font-size:16px}
+/* Header */
+.hdr{background:linear-gradient(135deg,#0f2044,#1e3a5f);padding:18px 20px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.hdr h1{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.hdr .prop{font-size:11px;color:#93c5fd;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+.hdr .tagline{font-size:12px;color:#7dd3fc;margin-top:2px}
+.conn-pill{display:inline-flex;align-items:center;gap:6px;border-radius:var(--radius-pill);padding:5px 12px;font-size:12px;font-weight:700;white-space:nowrap;border:1.5px solid;transition:all .3s}
+.conn-pill.ok{background:#dcfce7;border-color:#86efac;color:#15803d}
+.conn-pill.err{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.conn-pill.checking{background:#fef9c3;border-color:#fde68a;color:#92400e}
+.conn-dot{width:8px;height:8px;border-radius:50%}
+/* Nav */
+.nav{background:var(--white);border-bottom:2px solid #e2e8f0;display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:68px;z-index:99}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:14px 16px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:600;color:var(--slate-mid);border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all .15s}
+.nav-btn.active{font-weight:800;color:var(--blue);border-bottom:3px solid var(--blue)}
+.nav-btn .badge{background:var(--amber);color:#fff;border-radius:var(--radius-pill);padding:1px 7px;font-size:11px;font-weight:800}
+/* Main */
+main{padding:16px;max-width:680px;margin:0 auto}
+/* Cards */
+.card{background:var(--white);border-radius:var(--radius);border:1.5px solid #e2e8f0;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+/* Sync msg */
+.sync-msg{border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;font-size:14px;font-weight:600;display:none;animation:fadeIn .3s ease}
+.sync-msg.success{background:var(--green-light);border:2px solid var(--green-border);color:#15803d}
+.sync-msg.error{background:var(--red-light);border:2px solid var(--red-border);color:#991b1b}
+.sync-msg.pending{background:var(--blue-light);border:2px solid var(--blue-border);color:#1e40af}
+/* Queue banner */
+.queue-banner{background:linear-gradient(135deg,#1e40af,#2563eb);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;color:#fff}
+.queue-banner h2{font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.queue-banner ol{padding-left:18px;font-size:14px;color:#bfdbfe;line-height:2}
+.queue-banner ol li strong{color:#fff}
+/* Queue items */
+.q-item{background:var(--white);border-radius:var(--radius);border:2px solid var(--blue-border);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.q-item-head{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.q-item-title{font-size:15px;font-weight:700}
+.q-item-source{font-size:12px;color:var(--slate-light);margin-top:2px}
+.q-fields{padding:12px 16px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+/* Fields */
+.field-wrap{display:flex;flex-direction:column;gap:4px}
+.field-label{font-size:11px;font-weight:700;color:var(--slate-mid);text-transform:uppercase;letter-spacing:.6px}
+input,select{border:1.5px solid #cbd5e1;border-radius:var(--radius-sm);padding:10px 12px;font-size:15px;color:var(--slate);background:var(--white);width:100%;font-family:inherit;outline:none;transition:border-color .15s;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+/* Buttons */
+.btn{border:none;border-radius:var(--radius-sm);padding:12px 20px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn:active{transform:scale(.97)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#15803d}
+.btn-green:disabled{background:#94a3b8;cursor:not-allowed;transform:none}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#1d4ed8}
+.btn-gray{background:#f1f5f9;border:1.5px solid #e2e8f0;color:var(--slate-mid)}
+.btn-gray:hover{background:#e2e8f0}
+.btn-red{background:var(--red-light);color:var(--red);padding:8px 14px;font-size:13px}
+.btn-approve{background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn-approve:disabled{background:#94a3b8;cursor:not-allowed}
+/* Sheet type selector */
+.sheet-selector{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:16px}
+.sheet-opt{border:2px solid #e2e8f0;border-radius:var(--radius);padding:12px 10px;cursor:pointer;text-align:center;background:var(--white);transition:all .15s}
+.sheet-opt:hover{border-color:#93c5fd}
+.sheet-opt.selected{border-color:var(--blue);background:var(--blue-light)}
+.sheet-opt .sicon{font-size:24px;margin-bottom:4px}
+.sheet-opt .sname{font-size:12px;font-weight:700;color:var(--slate-mid)}
+.sheet-opt.selected .sname{color:var(--blue)}
+/* Pool tabs */
+.pool-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pool-tab{padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:600;border:2px solid #e2e8f0;background:var(--white);color:var(--slate-mid);font-family:inherit;transition:all .15s}
+/* Summary */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:14px 16px;border:1.5px solid #e2e8f0;box-shadow:var(--shadow)}
+.stat-label{font-size:10px;font-weight:700;color:var(--slate-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.stat-value{font-size:22px;font-weight:800;font-family:'DM Mono',monospace}
+.stat-sub{font-size:11px;color:var(--slate-light);margin-top:3px}
+/* Empty state */
+.empty{text-align:center;padding:48px 20px;color:var(--slate-light)}
+.empty-icon{font-size:52px;margin-bottom:12px}
+.empty h3{font-size:17px;font-weight:700;color:#64748b;margin-bottom:6px}
+.empty p{font-size:14px;line-height:1.6}
+/* Row card */
+.row-card{border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);max-width:calc(100vw - 32px);width:380px;border-radius:var(--radius);padding:14px 20px;font-size:14px;font-weight:700;box-shadow:var(--shadow-md);z-index:9999;opacity:0;transition:all .35s;pointer-events:none;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--green-light);border:2px solid var(--green-border);color:#15803d}
+.toast.error{background:var(--red-light);border:2px solid var(--red-border);color:#991b1b}
+/* Prefill flash */
+@keyframes flashGreen{0%{background:#dcfce7}100%{background:var(--white)}}
+.flashed{animation:flashGreen 1.5s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+/* Responsive */
+@media(max-width:480px){
+  .hdr h1{font-size:18px}
+  .q-item-head{flex-direction:column;align-items:flex-start}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+/* Section header */
+.sec-head{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.sec-title{font-size:15px;font-weight:700}
+.sec-total{font-size:15px;font-weight:800;font-family:'DM Mono',monospace}
+.divider{height:1px;background:#f1f5f9;margin:0 16px}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="prop">233 & 235 W 80TH ST · LOS ANGELES</div>
+      <h1>Tax Tracker</h1>
+      <div class="tagline">Send receipts to Claude → pre-filled link → one tap sync 📱</div>
+    </div>
+    <div class="conn-pill checking" id="connPill">
+      <div class="conn-dot" id="connDot" style="background:#d97706"></div>
+      <span id="connText">Checking…</span>
+    </div>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showTab('queue')" id="nav-queue">
+    ⚡ Queue <span class="badge" id="qBadge" style="display:none">0</span>
+  </button>
+  <button class="nav-btn" onclick="showTab('manual')" id="nav-manual">✏️ Manual</button>
+  <button class="nav-btn" onclick="showTab('pool')" id="nav-pool">🗂 Pool</button>
+  <button class="nav-btn" onclick="showTab('summary')" id="nav-summary">📊 Summary</button>
+</nav>
+
+<main>
+  <div class="sync-msg" id="syncMsg"></div>
+
+  <!-- ── QUEUE TAB ── -->
+  <div id="tab-queue">
+    <div class="queue-banner">
+      <h2>⚡ Automatic Receipt Sync</h2>
+      <ol>
+        <li><strong>Send receipt photo</strong> to Claude in chat</li>
+        <li><strong>Claude reads it</strong> — flags issues, confirms with you</li>
+        <li><strong>Click the pre-filled link</strong> Claude gives you</li>
+        <li><strong>Tap Approve & Sync</strong> — appears in Google Sheets 📱</li>
+      </ol>
+    </div>
+    <div id="queueList"></div>
+  </div>
+
+  <!-- ── MANUAL TAB ── -->
+  <div id="tab-manual" style="display:none">
+    <div class="card">
+      <div style="padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--slate-mid);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Sheet Type</div>
+        <div class="sheet-selector" id="sheetSelector"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--slate-mid);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Entry Details</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:16px" id="fieldGrid"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-green" id="syncBtn" onclick="submitManual()" style="flex:1;min-width:200px">
+            ✓ Add & Sync to Google Sheets 📱
+          </button>
+          <button class="btn btn-gray" onclick="clearForm()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── POOL TAB ── -->
+  <div id="tab-pool" style="display:none">
+    <div class="pool-tabs" id="poolTabs"></div>
+    <div id="poolContent"></div>
+  </div>
+
+  <!-- ── SUMMARY TAB ── -->
+  <div id="tab-summary" style="display:none">
+    <div style="font-size:18px;font-weight:800;margin-bottom:14px">📊 2026 Tax Summary</div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div id="catGrid"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlyVOocPh42pyMRMF9LmOXGl0MWzt330z6RoBeTcvpB5zpVNByMrUt7Rb9XgkZpIgT_g/exec";
+const POOL_KEY = "tax_v14";
+
+const PROPERTIES = ["233 w 80th Street","235 w 80th Street"];
+const YEARS = ["2024","2025","2026"];
+const PAY = ["Credit card 6149","Mastercard 7503","Visa 6975","Check/Payment","Check/Auto Pay","Cash","billpay","Other"];
+const ECATS = ["Advertising","Auto and travel","Cleaning and maintenance","Commissions","Insurance","Legal and professional fees","Management fees","Mortgage interest","Other interest","Repairs","Supplies","Taxes","Utilities","Depreciation","Other expenses"];
+const CCATS = ["Gross receipts (Income)","Advertising","Car and truck expenses","Commissions and fees","Contract labor","Depreciation","Employee benefit programs","Insurance (other than health)","Legal and professional services","Office expense","Repairs and maintenance","Supplies","Taxes and licenses","Travel","Deductible meals","Utilities","Wages","Other expenses"];
+
+const SHEET_DEFS = {
+  "Rental Expenses":{icon:"🧾",color:"#d97706",bg:"#fffbeb",border:"#fcd34d",
+    sheetTab:yr=>`${yr} Income & Expenses`,
+    toRow:e=>[e.Property,e.Date,e.Category,e.Description,e.Vendor,e.Amount,e.PaymentMethod,e.ReceiptNum,"","",e.Notes],
+    fields:[{k:"Year",l:"Year",t:"sel",o:YEARS,def:"2026"},{k:"Property",l:"Property",t:"sel",o:PROPERTIES},{k:"Date",l:"Date",t:"date"},{k:"Category",l:"Category",t:"sel",o:ECATS},{k:"Description",l:"Description",t:"txt"},{k:"Vendor",l:"Vendor",t:"txt"},{k:"Amount",l:"Amount ($)",t:"num"},{k:"PaymentMethod",l:"Payment",t:"sel",o:PAY},{k:"ReceiptNum",l:"Receipt #",t:"txt"},{k:"Notes",l:"Notes",t:"txt"}]},
+  "Rental Income":{icon:"🏠",color:"#16a34a",bg:"#f0fdf4",border:"#86efac",
+    sheetTab:yr=>`${yr} Income & Expenses`,
+    toRow:e=>[e.Property,e.Date,e.Description,e.TenantName,e.Amount,e.PaymentMethod,e.Notes],
+    fields:[{k:"Year",l:"Year",t:"sel",o:YEARS,def:"2026"},{k:"Property",l:"Property",t:"sel",o:PROPERTIES},{k:"Date",l:"Date",t:"date"},{k:"Description",l:"Description",t:"txt"},{k:"TenantName",l:"Tenant",t:"txt"},{k:"Amount",l:"Amount ($)",t:"num"},{k:"PaymentMethod",l:"Payment",t:"sel",o:PAY},{k:"Notes",l:"Notes",t:"txt"}]},
+  "Schedule C":{icon:"💼",color:"#2563eb",bg:"#eff6ff",border:"#93c5fd",
+    sheetTab:()=>"2025 Sch C Income & Expenses",
+    toRow:e=>[e.Date,e.Type,e.Category,e.Description,e.Payer,e.Amount,e.PaymentMethod,e.Notes],
+    fields:[{k:"Year",l:"Year",t:"sel",o:YEARS,def:"2026"},{k:"Date",l:"Date",t:"date"},{k:"Type",l:"Type",t:"sel",o:["Income","Expense"]},{k:"Category",l:"Category",t:"sel",o:CCATS},{k:"Description",l:"Description",t:"txt"},{k:"Payer",l:"Payer/Payee",t:"txt"},{k:"Amount",l:"Amount ($)",t:"num"},{k:"PaymentMethod",l:"Payment",t:"sel",o:PAY},{k:"Notes",l:"Notes",t:"txt"}]},
+  "Mileage Log":{icon:"🚗",color:"#7c3aed",bg:"#f5f3ff",border:"#c4b5fd",
+    sheetTab:()=>"Mileage (App Import)",
+    toRow:e=>[e.Date,e.Client,e.Vehicle,e.Purpose,"","",e.Miles,"",e.Notes],
+    fields:[{k:"Year",l:"Year",t:"sel",o:YEARS,def:"2026"},{k:"Date",l:"Date",t:"date"},{k:"Client",l:"Client",t:"txt"},{k:"Vehicle",l:"Vehicle",t:"txt"},{k:"Purpose",l:"Purpose",t:"txt"},{k:"Miles",l:"Miles",t:"num"},{k:"Notes",l:"Notes",t:"txt"}]},
+  "Capital Improvements":{icon:"🏗️",color:"#db2777",bg:"#fdf2f8",border:"#f9a8d4",
+    sheetTab:()=>"Capital Improvements",
+    toRow:e=>[e.Property,e.DatePlaced,e.ImprovementType,e.Description,e.Cost,e.DeprecYears,"","",e.Notes],
+    fields:[{k:"Property",l:"Property",t:"sel",o:PROPERTIES},{k:"DatePlaced",l:"Date Placed",t:"date"},{k:"ImprovementType",l:"Type",t:"txt"},{k:"Description",l:"Description",t:"txt"},{k:"Cost",l:"Cost ($)",t:"num"},{k:"DeprecYears",l:"Deprec Yrs",t:"num",def:"27.5"},{k:"Notes",l:"Notes",t:"txt"}]},
+};
+const SNAMES = Object.keys(SHEET_DEFS);
+
+let pool = JSON.parse(localStorage.getItem(POOL_KEY)||"null") || Object.fromEntries(SNAMES.map(s=>[s,[]]));
+let queue = [];
+let activePool = "Rental Expenses";
+let activeSheet = "Rental Expenses";
+function savePool(){ localStorage.setItem(POOL_KEY, JSON.stringify(pool)); }
+
+// ── Connection ────────────────────────────────────────────────────────────────
+fetch(SCRIPT_URL).then(r=>r.json()).then(d=>{
+  const ok=d.status==="ok";
+  const pill=document.getElementById("connPill");
+  document.getElementById("connDot").style.background=ok?"#16a34a":"#dc2626";
+  document.getElementById("connText").textContent=ok?"✅ Sheets Connected":"⚠️ Not Connected";
+  pill.className="conn-pill "+(ok?"ok":"err");
+}).catch(()=>{
+  document.getElementById("connDot").style.background="#dc2626";
+  document.getElementById("connText").textContent="⚠️ Offline";
+  document.getElementById("connPill").className="conn-pill err";
+});
+
+// ── URL Hash pre-fill (Claude generates these links) ──────────────────────────
+window.addEventListener("load",()=>{
+  try{
+    const hash=window.location.hash.slice(1);
+    if(!hash) return;
+    const data=JSON.parse(decodeURIComponent(hash));
+    // Support single entry or array
+    const entries=Array.isArray(data)?data:[data];
+    entries.forEach(e=>{
+      queue.push({...e, _id:Date.now()+Math.random(), _source:"Claude"});
+    });
+    history.replaceState(null,"",window.location.pathname);
+    renderQueue();
+    updateQBadge();
+    showTab("queue");
+    showToast(`✅ ${entries.length} entr${entries.length===1?"y":"ies"} loaded from Claude!`,"success");
+    // Flash effect
+    setTimeout(()=>{
+      document.querySelectorAll(".q-item").forEach(el=>{
+        el.classList.add("flashed");
+        setTimeout(()=>el.classList.remove("flashed"),1500);
+      });
+    },300);
+  }catch(e){ /* no hash or invalid */ }
+});
+
+// Also poll localStorage for entries from same-browser tabs
+setInterval(()=>{
+  try{
+    const raw=localStorage.getItem("tax_queue_incoming");
+    if(!raw) return;
+    const entries=JSON.parse(raw);
+    if(!entries?.length) return;
+    localStorage.removeItem("tax_queue_incoming");
+    entries.forEach(e=>queue.push({...e,_id:Date.now()+Math.random(),_source:"Claude"}));
+    renderQueue(); updateQBadge(); showTab("queue");
+    showToast(`✅ ${entries.length} entr${entries.length===1?"y":"ies"} from Claude!`,"success");
+  }catch{}
+},600);
+
+function updateQBadge(){
+  const b=document.getElementById("qBadge");
+  b.textContent=queue.length;
+  b.style.display=queue.length>0?"inline":"none";
+}
+
+// ── Queue render ──────────────────────────────────────────────────────────────
+function renderQueue(){
+  const el=document.getElementById("queueList");
+  if(!queue.length){
+    el.innerHTML=`<div class="empty">
+      <div class="empty-icon">📸</div>
+      <h3>Queue is empty</h3>
+      <p>Send a receipt photo to Claude in the chat.<br>Claude will read it and send you a<br><strong>pre-filled link</strong> — one tap loads it here.</p>
+    </div>`;
+    return;
+  }
+  let html=queue.length>1?`<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <button class="btn btn-green" onclick="approveAll()">✓ Approve All ${queue.length} & Sync 📱</button>
+  </div>`:"";
+
+  queue.forEach(item=>{
+    const sheet=item._sheet||"Rental Expenses";
+    const sd=SHEET_DEFS[sheet]||SHEET_DEFS["Rental Expenses"];
+    html+=`<div class="q-item" id="qi_${item._id}">
+      <div class="q-item-head" style="background:${sd.bg}">
+        <div>
+          <div class="q-item-title" style="color:${sd.color}">${sd.icon} ${sheet}</div>
+          ${item._source?`<div class="q-item-source">from ${item._source}</div>`:""}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select onchange="changeQSheet('${item._id}',this.value)"
+            style="border:2px solid ${sd.border};color:${sd.color};font-weight:700;font-size:13px;padding:7px 30px 7px 10px;border-radius:8px;background:#fff">
+            ${SNAMES.map(s=>`<option value="${s}"${s===sheet?" selected":""}>${s}</option>`).join("")}
+          </select>
+          <button class="btn-approve" id="ab_${item._id}" onclick="approveOne('${item._id}')">✓ Approve & Sync 📱</button>
+          <button class="btn btn-red" onclick="removeQ('${item._id}')">✕</button>
+        </div>
+      </div>
+      <div class="q-fields">
+        ${SHEET_DEFS[sheet].fields.map(f=>`
+          <div class="field-wrap">
+            <div class="field-label">${f.l}</div>
+            ${f.t==="sel"
+              ?`<select id="q_${item._id}_${f.k}" style="border-color:${sd.border}" onchange="updQ('${item._id}','${f.k}',this.value)">
+                  <option value="">— select —</option>
+                  ${f.o.map(o=>`<option value="${o}"${(item[f.k]||"")===o?" selected":""}>${o}</option>`).join("")}
+                </select>`
+              :`<input type="${f.t==="num"?"number":"text"}" id="q_${item._id}_${f.k}"
+                  value="${(item[f.k]||"").toString().replace(/"/g,"&quot;")}"
+                  placeholder="${f.ph||""}"
+                  style="border-color:${sd.border}"
+                  oninput="updQ('${item._id}','${f.k}',this.value)"/>`}
+          </div>`).join("")}
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function changeQSheet(id,sheet){
+  const item=queue.find(x=>x._id==id);
+  if(item){item._sheet=sheet;renderQueue();}
+}
+function updQ(id,k,v){
+  const item=queue.find(x=>x._id==id);
+  if(item) item[k]=v;
+}
+function removeQ(id){
+  queue=queue.filter(x=>x._id!=id);
+  renderQueue(); updateQBadge();
+}
+
+async function approveOne(id){
+  const item=queue.find(x=>x._id==id);
+  if(!item) return;
+  const btn=document.getElementById("ab_"+id);
+  if(btn){btn.disabled=true;btn.textContent="⚙️ Syncing…";}
+  const sheet=item._sheet||"Rental Expenses";
+  const entry=Object.fromEntries(Object.entries(item).filter(([k])=>!k.startsWith("_")));
+  try{
+    await doSync(sheet,entry);
+    pool[sheet].push(entry); savePool();
+    queue=queue.filter(x=>x._id!=id);
+    renderQueue(); updateQBadge();
+    showToast("✅ Synced to Google Sheets! Check your phone 📱","success");
+  }catch(e){
+    showToast("❌ "+e.message,"error");
+    if(btn){btn.disabled=false;btn.textContent="✓ Approve & Sync 📱";}
+  }
+}
+
+async function approveAll(){
+  for(const item of [...queue]) await approveOne(item._id);
+}
+
+// ── Core sync ─────────────────────────────────────────────────────────────────
+async function doSync(sheet,entry){
+  const sd=SHEET_DEFS[sheet];
+  const tab=sd.sheetTab(entry.Year||"2026");
+  const row=sd.toRow(entry);
+  showSyncMsg(`📤 Writing to "${tab}"…`,"pending");
+  const resp=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({tab,row})});
+  const d=await resp.json();
+  if(d.status==="error") throw new Error(d.message);
+  showSyncMsg(`✅ Written to "${tab}" row ${d.row} — check your phone 📱`,"success");
+  setTimeout(()=>showSyncMsg("",""),5000);
+}
+
+// ── Manual entry ──────────────────────────────────────────────────────────────
+function buildSheetSelector(){
+  const el=document.getElementById("sheetSelector");
+  el.innerHTML=SNAMES.map(s=>{
+    const sd=SHEET_DEFS[s];
+    return`<div class="sheet-opt${s===activeSheet?" selected":""}" onclick="selectSheet('${s}')">
+      <div class="sicon">${sd.icon}</div>
+      <div class="sname">${s}</div>
+    </div>`;
+  }).join("");
+}
+
+function selectSheet(sheet){
+  activeSheet=sheet;
+  buildSheetSelector();
+  renderFields();
+}
+
+function renderFields(){
+  const sd=SHEET_DEFS[activeSheet];
+  document.getElementById("fieldGrid").innerHTML=sd.fields.map(f=>`
+    <div class="field-wrap">
+      <div class="field-label">${f.l}</div>
+      ${f.t==="sel"
+        ?`<select id="f_${f.k}" style="border-color:${sd.border}">
+            <option value="">— select —</option>
+            ${f.o.map(o=>`<option value="${o}"${o===(f.def||"")?" selected":""}>${o}</option>`).join("")}
+          </select>`
+        :f.t==="date"
+          ?`<input type="date" id="f_${f.k}" style="border-color:${sd.border}" value="${new Date().toISOString().slice(0,10)}"/>`
+          :`<input type="${f.t==="num"?"number":"text"}" id="f_${f.k}" style="border-color:${sd.border}" value="${f.def||""}" placeholder="${f.ph||""}"/>`
+      }
+    </div>`).join("");
+}
+
+function getFormEntry(){
+  const sd=SHEET_DEFS[activeSheet];
+  const entry={};
+  sd.fields.forEach(f=>{
+    const el=document.getElementById("f_"+f.k);
+    if(el){
+      let v=el.value;
+      if(f.t==="date"&&v){const[y,m,d]=v.split("-");v=`${m}/${d}/${y}`;}
+      entry[f.k]=v;
+    }
+  });
+  return entry;
+}
+
+async function submitManual(){
+  const entry=getFormEntry();
+  const hasDate=entry.Date||entry.DatePlaced;
+  if(!hasDate){showToast("Please enter a date","error");return;}
+  const btn=document.getElementById("syncBtn");
+  btn.disabled=true;btn.innerHTML="⚙️ Syncing…";
+  try{
+    await doSync(activeSheet,entry);
+    pool[activeSheet].push(entry);savePool();
+    showToast("✅ Synced to Google Sheets! Check your phone 📱","success");
+    setTimeout(clearForm,1500);
+  }catch(e){showToast("❌ "+e.message,"error");}
+  btn.disabled=false;btn.innerHTML="✓ Add & Sync to Google Sheets 📱";
+}
+
+function clearForm(){renderFields();showSyncMsg("","");}
+
+// ── Pool ──────────────────────────────────────────────────────────────────────
+function renderPool(){
+  document.getElementById("poolTabs").innerHTML=SNAMES.map(s=>{
+    const sd=SHEET_DEFS[s],isA=s===activePool;
+    return`<button class="pool-tab" onclick="setActivePool('${s}')"
+      style="${isA?`background:${sd.bg};border-color:${sd.color};color:${sd.color};font-weight:800`:""}">
+      ${sd.icon} ${s}${pool[s].length?` <span style="background:${sd.color};color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:800">${pool[s].length}</span>`:""}
+    </button>`;
+  }).join("");
+
+  const sd=SHEET_DEFS[activePool];
+  const rows=pool[activePool];
+  const total=rows.reduce((s,r)=>s+(parseFloat(r.Amount||r.Cost)||0),0);
+  const miles=rows.reduce((s,r)=>s+(parseFloat(r.Miles)||0),0);
+
+  document.getElementById("poolContent").innerHTML=`
+    <div class="card" style="border-color:${sd.border}">
+      <div class="sec-head" style="background:${sd.bg}">
+        <div class="sec-title" style="color:${sd.color}">${sd.icon} ${activePool} — ${rows.length} records</div>
+        ${activePool==="Mileage Log"&&miles
+          ?`<div class="sec-total" style="color:${sd.color}">${miles.toLocaleString()} mi · $${(miles*.70).toFixed(2)}</div>`
+          :total?`<div class="sec-total" style="color:${sd.color}">$${total.toLocaleString("en-US",{minimumFractionDigits:2})}</div>`:""}
+      </div>
+      <div style="padding:12px 14px">
+        ${!rows.length?`<div class="empty"><div class="empty-icon">📋</div><h3>No entries yet</h3></div>`
+        :rows.map((r,i)=>`
+          <div class="row-card" style="border:1.5px solid ${sd.border};background:${sd.bg}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:700;color:${sd.color}">Entry ${i+1}</span>
+              <button class="btn btn-red" onclick="delRow(${i})">✕ Remove</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px;font-size:13px">
+              ${SHEET_DEFS[activePool].fields.map(f=>r[f.k]?`<div><span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase">${f.l}: </span><span style="font-weight:600">${r[f.k]}</span></div>`:"").join("")}
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+}
+function setActivePool(s){activePool=s;renderPool();}
+function delRow(i){pool[activePool].splice(i,1);savePool();renderPool();}
+
+// ── Summary ───────────────────────────────────────────────────────────────────
+function renderSummary(){
+  const yr="2026";
+  const rExp=pool["Rental Expenses"].filter(r=>r.Year===yr);
+  const rInc=pool["Rental Income"].filter(r=>r.Year===yr);
+  const tInc=rInc.reduce((s,r)=>s+(parseFloat(r.Amount)||0),0);
+  const tExp=rExp.reduce((s,r)=>s+(parseFloat(r.Amount)||0),0);
+  const net=tInc-tExp;
+  const b233=rExp.filter(r=>r.Property==="233 w 80th Street").reduce((s,r)=>s+(parseFloat(r.Amount)||0),0);
+  const b235=rExp.filter(r=>r.Property==="235 w 80th Street").reduce((s,r)=>s+(parseFloat(r.Amount)||0),0);
+  const schC=pool["Schedule C"].filter(r=>r.Year===yr);
+  const cInc=schC.filter(r=>r.Type==="Income").reduce((s,r)=>s+(parseFloat(r.Amount)||0),0);
+  const cExp=schC.filter(r=>r.Type==="Expense").reduce((s,r)=>s+(parseFloat(r.Amount)||0),0);
+  const miles=pool["Mileage Log"].filter(r=>r.Year===yr).reduce((s,r)=>s+(parseFloat(r.Miles)||0),0);
+  const byCat={};rExp.forEach(r=>{const c=r.Category||"Other";byCat[c]=(byCat[c]||0)+(parseFloat(r.Amount)||0);});
+  const fmt=n=>`$${n.toLocaleString("en-US",{minimumFractionDigits:2})}`;
+  const total=Object.values(pool).reduce((s,a)=>s+a.length,0);
+
+  const stats=[
+    {l:"Rental Income",v:fmt(tInc),c:"#16a34a"},{l:"Rental Expenses",v:fmt(tExp),c:"#dc2626"},
+    {l:"Net Income",v:fmt(net),c:net>=0?"#16a34a":"#dc2626"},{l:"233 Expenses",v:fmt(b233),c:"#d97706"},
+    {l:"235 Expenses",v:fmt(b235),c:"#d97706"},{l:"Sch C Income",v:fmt(cInc),c:"#2563eb"},
+    {l:"Sch C Expenses",v:fmt(cExp),c:"#7c3aed"},{l:"Mileage",v:miles.toLocaleString()+" mi",c:"#7c3aed",sub:fmt(miles*.70)+" deduction"},
+  ];
+
+  document.getElementById("statGrid").innerHTML=!total
+    ?`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Add entries to see your tax summary</p></div>`
+    :stats.map(s=>`<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-value" style="color:${s.c}">${s.v}</div>${s.sub?`<div class="stat-sub">${s.sub}</div>`:""}</div>`).join("");
+
+  document.getElementById("catGrid").innerHTML=Object.keys(byCat).length
+    ?`<div class="card" style="padding:16px">
+        <div style="font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">By Schedule E Category</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`
+            <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:10px 14px;min-width:110px">
+              <div style="font-size:11px;font-weight:700;color:#92400e">${c}</div>
+              <div style="font-size:16px;font-weight:800;color:#d97706;font-family:'DM Mono',monospace">$${v.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+            </div>`).join("")}
+        </div>
+      </div>`:"";
+}
+
+// ── Tab switch ────────────────────────────────────────────────────────────────
+function showTab(t){
+  ["queue","manual","pool","summary"].forEach(v=>{
+    document.getElementById("tab-"+v).style.display=v===t?"block":"none";
+    document.getElementById("nav-"+v).classList.toggle("active",v===t);
+  });
+  if(t==="pool") renderPool();
+  if(t==="summary") renderSummary();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function showSyncMsg(msg,type){
+  const el=document.getElementById("syncMsg");
+  if(!msg){el.style.display="none";return;}
+  el.style.display="block";el.className="sync-msg "+type;el.textContent=msg;
+}
+
+let toastT;
+function showToast(msg,type="success"){
+  const el=document.getElementById("toast");
+  el.textContent=msg;el.className=`toast show ${type}`;
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),4500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildSheetSelector();
+renderFields();
+renderQueue();
+</script>
+</body>
+</html>
